@@ -1,6 +1,6 @@
 USE gyms_api;
 
-INSERT INTO gyms (name, address, monthlyFee) VALUES
+INSERT INTO gyms (name, address, monthly_fee) VALUES
   ('Fitness First Central Chonburi', 'เซ็นทรัล ชลบุรี', 1500.00),
   ('Fit Plus Gym', 'บางแสน ชลบุรี', 1200.00);
 

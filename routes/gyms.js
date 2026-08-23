@@ -29,16 +29,16 @@ router.get('/:id', async (req, res, next) => {
 // 3. POST /gyms - เพิ่มข้อมูลฟิสเนตใหม่
 router.post('/', async (req, res, next) => {
     try {
-        const { name, address, monthlyFee } = req.body;
+        const { name, address, monthly_fee } = req.body;
 
         // ตรวจสอบว่าใส่ข้อมูลครบถ้วนหรือไม่
-        if(name === undefined || address === undefined || monthlyFee === undefined){
+        if(name === undefined || address === undefined || monthly_fee === undefined){
             return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
         }
 
-        // ตรวจสอบว่า monthlyFee เป็นตัวเลขที่ถูกต้อง (ตรงตาม schema: DECIMAL(10,2) NOT NULL)
-        if(isNaN(monthlyFee) || Number(monthlyFee) < 0){
-            return res.status(400).json({ message: "monthlyFee ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0" });
+        // ตรวจสอบว่า monthly_fee เป็นตัวเลขที่ถูกต้อง (ตรงตาม schema: DECIMAL(10,2) NOT NULL)
+        if(isNaN(monthly_fee) || Number(monthly_fee) < 0){
+            return res.status(400).json({ message: "monthly_fee ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0" });
         }
 
         // ตรวจสอบว่ามี gym ที่มีชื่อเดียวกันอยู่แล้วหรือไม่
@@ -48,9 +48,9 @@ router.post('/', async (req, res, next) => {
             return res.status(409).json({ message: "มีฟิสเนตที่มีชื่อเดียวกันอยู่แล้ว" });
         }
 
-        const [result] = await pool.query('INSERT INTO gyms (name, address, monthlyFee) VALUES (?, ?, ?)', [name, address, monthlyFee]);
+        const [result] = await pool.query('INSERT INTO gyms (name, address, monthly_fee) VALUES (?, ?, ?)', [name, address, monthly_fee]);
 
-        res.status(201).json({ message: "เพิ่มข้อมูลฟิสเนตสำเร็จ", data: { id: result.insertId, name, address, monthlyFee } });
+        res.status(201).json({ message: "เพิ่มข้อมูลฟิสเนตสำเร็จ", data: { id: result.insertId, name, address, monthly_fee } });
 
     } catch (err) {
         next(err);
@@ -60,15 +60,15 @@ router.post('/', async (req, res, next) => {
 // 4. PUT /gyms/:id - แก้ไขข้อมูลฟิสเนตตาม id
 router.put('/:id', async (req, res, next) => {
     try {
-        const { name, address, monthlyFee } = req.body;
+        const { name, address, monthly_fee } = req.body;
 
-         if(name === undefined || address === undefined || monthlyFee === undefined){
+         if(name === undefined || address === undefined || monthly_fee === undefined){
             return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
         }
 
-        // ตรวจสอบว่า monthlyFee เป็นตัวเลขที่ถูกต้อง (ตรงตาม schema: DECIMAL(10,2) NOT NULL)
-        if(isNaN(monthlyFee) || Number(monthlyFee) < 0){
-            return res.status(400).json({ message: "monthlyFee ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0" });
+        // ตรวจสอบว่า monthly_fee เป็นตัวเลขที่ถูกต้อง (ตรงตาม schema: DECIMAL(10,2) NOT NULL)
+        if(isNaN(monthly_fee) || Number(monthly_fee) < 0){
+            return res.status(400).json({ message: "monthly_fee ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0" });
         }
 
         // ตรวจสอบชื่อว่ามีชื่อ เดียวกันอยู่แล้วหรือไม่ (ยกเว้นตัวเอง)
@@ -84,14 +84,14 @@ router.put('/:id', async (req, res, next) => {
             return res.status(404).json({ message: "ไม่พบข้อมูลฟิสเนต" });
         }
 
-        const [result] = await pool.query('UPDATE gyms SET name = ?, address = ?, monthlyFee = ? WHERE id = ?', [name, address, monthlyFee, req.params.id]);
+        const [result] = await pool.query('UPDATE gyms SET name = ?, address = ?, monthly_fee = ? WHERE id = ?', [name, address, monthly_fee, req.params.id]);
 
         // .affectedRows จะบอกว่ามีแถวที่ถูกแก้ไขกี่แถว ถ้าเป็น 0 แสดงว่าไม่มี gym ที่มี id นี้อยู่
         if(result.affectedRows === 0){
             return res.status(404).json({ message: "ไม่พบข้อมูลฟิสเนต" });
         }
 
-        res.status(200).json({ message: "แก้ไขข้อมูลฟิสเนตสำเร็จ", data: { id: req.params.id, name, address, monthlyFee } });
+        res.status(200).json({ message: "แก้ไขข้อมูลฟิสเนตสำเร็จ", data: { id: req.params.id, name, address, monthly_fee } });
     } catch (err) {
         next(err);
     }
