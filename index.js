@@ -4,31 +4,65 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
+
+// Import routes
+const GymRoutes = require("./routes/gyms");
+const MemberRoutes = require("./routes/members");
+const TrainerRoutes = require("./routes/trainers");
+const MembershipRoutes = require("./routes/memberships");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-const GymRoutes = require("./routes/gyms");
 
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Student API พร้อมใช้งาน" });
-});
-
+// ลำดับ middleware มีความสำคัญ: security header → CORS → logger → body parser
 app.use(helmet());
 
 /* cors เอาไว้ใช้เพื่อให้ frontend สามารถเรียก API ของ backend ได้ */
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGIN , 
+    origin: process.env.ALLOWED_ORIGIN,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
 
 app.use(morgan("dev"));
-app.use(express.json({limit: "10Kb"})); // เพิ่ม limit ของ request body เป็น 10Kb เพื่อป้องกันการโจมตีแบบ Denial of Service (DoS) ที่ส่งข้อมูลขนาดใหญ่เกินไป
 
+function requireJson(req, res, next) {
+  const methodsWithBody = ["POST", "PUT"];
+  if (
+    methodsWithBody.includes(req.method) &&
+    req.headers["content-type"] !== "application/json"
+  ) {
+    return res.status(415).json({
+      error: {
+        code: "UNSUPPORTED_MEDIA_TYPE",
+        message: "กรุณาส่งข้อมูลในรูปแบบ application/json",
+      },
+    });
+  }
+  next();
+}
+
+app.use(requireJson);
+
+app.use(express.json({ limit: "10kb" })); // จำกัดขนาด request body เป็น 10Kb เพื่อป้องกันการโจมตีแบบ Denial of Service (DoS) ที่ส่งข้อมูลขนาดใหญ่เกินไป
+
+// เรียกใช้ routes
 app.use("/api/v1/gyms", GymRoutes);
+app.use("/api/v1/members", MemberRoutes);
+app.use("/api/v1/trainers", TrainerRoutes);
+app.use("/api/v1/memberships", MembershipRoutes);
 
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Gym API พร้อมใช้งาน" });
+});
+
+// 404: ไม่พบ route ที่ร้องขอ (ต้องอยู่หลัง route ทั้งหมด)
+app.use((req, res) => {
+  res.status(404).json({
+    error: { code: "ROUTE_NOT_FOUND", message: "ไม่พบเส้นทางที่ร้องขอ" },
+  });
+});
 
 // Error-handling middleware (ต้องมีพารามิเตอร์ 4 ตัวเสมอ)
 app.use((err, req, res, next) => {
@@ -47,4 +81,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server กำลังทำงานที่พอร์ต ${PORT} (${process.env.NODE_ENV})`);
 });
-

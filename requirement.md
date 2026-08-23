@@ -42,7 +42,7 @@
 
 | Resource | คำอธิบาย | ฟิลด์หลัก (ตัวอย่าง) |
 |---|---|---|
-| `gyms` | ข้อมูลสาขาฟิตเนส | id (PK), name, address, monthlyFee |
+| `gyms` | ข้อมูลสาขาฟิตเนส | id (PK), name, address, monthly_fee |
 | `trainers` | ข้อมูลเทรนเนอร์ของแต่ละสาขา | id (PK), name, specialty, gym_id (FK) |
 | `members` | ข้อมูลสมาชิก/ลูกค้า | id (PK), name, phone, email |
 | `memberships` | ข้อมูลการสมัครสมาชิกของลูกค้า เชื่อมสมาชิกกับสาขาและเทรนเนอร์ | id (PK), member_id (FK), gym_id (FK), trainer_id (FK), start_date, end_date |
