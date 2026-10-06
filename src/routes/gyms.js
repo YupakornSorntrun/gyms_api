@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { getExchangeRate } = require('../services/exchange-service');
 
 // 1. GET /gyms - ดึงข้อมูลฟิสเนตทั้งหมด
 router.get('/', async (req, res, next) => {
@@ -21,6 +22,50 @@ router.get('/:id', async (req, res, next) => {
             return res.status(404).json({ message: "ไม่พบข้อมูลฟิสเนต" });
         }
         res.status(200).json({ message: "สำเร็จ", data: rows[0] });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// GET /gyms/:id/fee?currency=USD - ราคาสมาชิกรายเดือนในสกุลเงินอื่น (เรียก External API: อัตราแลกเปลี่ยน)
+router.get('/:id/fee', async (req, res, next) => {
+    try {
+        const currency = String(req.query.currency || 'USD');
+        if (!/^[A-Za-z]{3}$/.test(currency)) {
+            return res.status(400).json({ message: "currency ต้องเป็นรหัสสกุลเงิน 3 ตัวอักษร เช่น USD" });
+        }
+
+        const [rows] = await pool.query('SELECT * FROM gyms WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "ไม่พบข้อมูลฟิสเนต" });
+        }
+        const gym = rows[0];
+        const base = { gym_id: gym.id, name: gym.name, monthly_fee: gym.monthly_fee, base_currency: "THB" };
+
+        const result = await getExchangeRate(currency);
+
+        if (result.unknownCurrency) {
+            return res.status(400).json({ message: `ไม่รู้จักสกุลเงิน ${currency.toUpperCase()}` });
+        }
+
+        // Fallback: API ภายนอกล้มเหลวหลัง retry ครบ -> ตอบ 200 พร้อมราคา THB และแจ้งสถานะให้ชัดเจน
+        if (!result.ok) {
+            return res.status(200).json({
+                message: "ไม่สามารถแปลงสกุลเงินได้ในขณะนี้ แสดงราคาเป็นบาท (THB) แทน",
+                data: { ...base, currency: "THB", converted_fee: null, rate_source: result.source },
+            });
+        }
+
+        res.status(200).json({
+            message: result.source === "cache" ? "สำเร็จ (ใช้อัตราแลกเปลี่ยนล่าสุดที่บันทึกไว้)" : "สำเร็จ",
+            data: {
+                ...base,
+                currency: currency.toUpperCase(),
+                rate: result.rate,
+                converted_fee: Number((Number(gym.monthly_fee) * result.rate).toFixed(2)),
+                rate_source: result.source,
+            },
+        });
     } catch (err) {
         next(err);
     }

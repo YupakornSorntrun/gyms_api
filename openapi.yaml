@@ -1,0 +1,939 @@
+openapi: 3.0.3
+info:
+  title: 'Gym API'
+  version: 1.0.0
+  description: 'ระบบข้อมูลฟิตเนส (Fitness Management System) - gyms, trainers, members, memberships'
+servers:
+  -
+    url: /api/v1
+    description: 'Current server'
+tags:
+  -
+    name: gyms
+  -
+    name: trainers
+  -
+    name: members
+  -
+    name: memberships
+paths:
+  /gyms:
+    get:
+      tags:
+        - gyms
+      summary: ดึงฟิตเนสทั้งหมด
+      description: คืนรายการฟิตเนสทั้งหมด
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Gym'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags:
+        - gyms
+      summary: เพิ่มฟิตเนสใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GymInput'
+            example:
+              name: 'Fit Plus Ladprao'
+              address: '123 ถ.ลาดพร้าว กรุงเทพฯ'
+              monthly_fee: 1200
+      responses:
+        '201':
+          description: เพิ่มฟิตเนสสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Gym'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  '/gyms/{id}':
+    get:
+      tags:
+        - gyms
+      summary: 'ดึงฟิตเนสตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Gym'
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลฟิสเนต
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      tags:
+        - gyms
+      summary: 'แก้ไขฟิตเนสตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GymInput'
+            example:
+              name: 'Fit Plus Ladprao'
+              address: '123 ถ.ลาดพร้าว กรุงเทพฯ'
+              monthly_fee: 1200
+      responses:
+        '200':
+          description: แก้ไขฟิตเนสสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Gym'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: 'ไม่พบข้อมูล หรือข้อมูลที่อ้างอิง'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลฟิสเนต
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - gyms
+      summary: 'ลบฟิตเนสตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: ลบฟิตเนสสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: ลบฟิตเนสสำเร็จ
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลฟิสเนต
+        '409':
+          description: 'ลบไม่ได้เพราะมีข้อมูลอื่นอ้างอิงอยู่ (Foreign Key)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่สามารถลบฟิตเนสนี้ได้
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /trainers:
+    get:
+      tags:
+        - trainers
+      summary: ดึงเทรนเนอร์ทั้งหมด
+      description: คืนรายการเทรนเนอร์ทั้งหมด
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Trainer'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags:
+        - trainers
+      summary: เพิ่มเทรนเนอร์ใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainerInput'
+            example:
+              name: Somchai
+              specialty: 'Weight training'
+              gym_id: 1
+      responses:
+        '201':
+          description: เพิ่มเทรนเนอร์สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Trainer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: ไม่พบข้อมูลที่อ้างอิง
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: 'ไม่พบข้อมูลฟิสเนตตาม gym_id ที่ระบุ'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  '/trainers/{id}':
+    get:
+      tags:
+        - trainers
+      summary: 'ดึงเทรนเนอร์ตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Trainer'
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลเทรนเนอร์
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      tags:
+        - trainers
+      summary: 'แก้ไขเทรนเนอร์ตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainerInput'
+            example:
+              name: Somchai
+              specialty: 'Weight training'
+              gym_id: 1
+      responses:
+        '200':
+          description: แก้ไขเทรนเนอร์สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Trainer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: 'ไม่พบข้อมูล หรือข้อมูลที่อ้างอิง'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลเทรนเนอร์
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - trainers
+      summary: 'ลบเทรนเนอร์ตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: ลบเทรนเนอร์สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: ลบเทรนเนอร์สำเร็จ
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลเทรนเนอร์
+        '409':
+          description: 'ลบไม่ได้เพราะมีข้อมูลอื่นอ้างอิงอยู่ (Foreign Key)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่สามารถลบเทรนเนอร์นี้ได้
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /members:
+    get:
+      tags:
+        - members
+      summary: ดึงสมาชิกทั้งหมด
+      description: คืนรายการสมาชิกทั้งหมด
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Member'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags:
+        - members
+      summary: เพิ่มสมาชิกใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+            example:
+              name: Anan
+              email: anan@example.com
+              phone: '0812345678'
+      responses:
+        '201':
+          description: เพิ่มสมาชิกสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  '/members/{id}':
+    get:
+      tags:
+        - members
+      summary: 'ดึงสมาชิกตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลสมาชิก
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      tags:
+        - members
+      summary: 'แก้ไขสมาชิกตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+            example:
+              name: Anan
+              email: anan@example.com
+              phone: '0812345678'
+      responses:
+        '200':
+          description: แก้ไขสมาชิกสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: 'ไม่พบข้อมูล หรือข้อมูลที่อ้างอิง'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลสมาชิก
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - members
+      summary: 'ลบสมาชิกตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: ลบสมาชิกสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: ลบสมาชิกสำเร็จ
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลสมาชิก
+        '409':
+          description: 'ลบไม่ได้เพราะมีข้อมูลอื่นอ้างอิงอยู่ (Foreign Key)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่สามารถลบสมาชิกนี้ได้
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /memberships:
+    get:
+      tags:
+        - memberships
+      summary: ดึงการสมัครสมาชิกทั้งหมด
+      description: คืนรายการการสมัครสมาชิกทั้งหมด
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Membership'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags:
+        - memberships
+      summary: เพิ่มการสมัครสมาชิกใหม่
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipInput'
+            example:
+              member_id: 1
+              gym_id: 1
+              startDate: '2026-01-01'
+              endDate: '2026-12-31'
+              trainer_id: null
+      responses:
+        '201':
+          description: เพิ่มการสมัครสมาชิกสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Membership'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: ไม่พบข้อมูลที่อ้างอิง
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: 'ไม่พบข้อมูลสมาชิกตาม member_id ที่ระบุ'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  '/memberships/{id}':
+    get:
+      tags:
+        - memberships
+      summary: 'ดึงการสมัครสมาชิกตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Membership'
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลการสมัครสมาชิก
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      tags:
+        - memberships
+      summary: 'แก้ไขการสมัครสมาชิกตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipInput'
+            example:
+              member_id: 1
+              gym_id: 1
+              startDate: '2026-01-01'
+              endDate: '2026-12-31'
+              trainer_id: null
+      responses:
+        '200':
+          description: แก้ไขการสมัครสมาชิกสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: สำเร็จ
+                  data:
+                    $ref: '#/components/schemas/Membership'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: 'ไม่พบข้อมูล หรือข้อมูลที่อ้างอิง'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลการสมัครสมาชิก
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - memberships
+      summary: 'ลบการสมัครสมาชิกตาม id'
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: ลบการสมัครสมาชิกสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: ลบการสมัครสมาชิกสำเร็จ
+        '404':
+          description: ไม่พบข้อมูล
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: ไม่พบข้อมูลการสมัครสมาชิก
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  responses:
+    BadRequest:
+      description: ข้อมูลไม่ครบถ้วนหรือไม่ถูกต้อง
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: ข้อมูลไม่ครบถ้วน
+    Conflict:
+      description: 'ข้อมูลซ้ำ (ชื่อสาขา, email หรือ phone)'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: มีข้อมูลซ้ำอยู่แล้ว
+    UnsupportedMediaType:
+      description: 'Content-Type ต้องเป็น application/json'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+          example:
+            error:
+              code: UNSUPPORTED_MEDIA_TYPE
+              message: 'กรุณาส่งข้อมูลในรูปแบบ application/json'
+    ServerError:
+      description: ข้อผิดพลาดภายในระบบ
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+          example:
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: เกิดข้อผิดพลาดที่ไม่คาดคิดภายในระบบ
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    ErrorObject:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+    GymInput:
+      type: object
+      required:
+        - name
+        - address
+        - monthly_fee
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        monthly_fee:
+          type: number
+          minimum: 0
+    Gym:
+      allOf:
+        -
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+        -
+          $ref: '#/components/schemas/GymInput'
+    TrainerInput:
+      type: object
+      required:
+        - name
+        - gym_id
+      properties:
+        name:
+          type: string
+        specialty:
+          type: string
+          nullable: true
+        gym_id:
+          type: integer
+          example: 1
+    Trainer:
+      allOf:
+        -
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+        -
+          $ref: '#/components/schemas/TrainerInput'
+    MemberInput:
+      type: object
+      required:
+        - name
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 20
+    Member:
+      allOf:
+        -
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+        -
+          $ref: '#/components/schemas/MemberInput'
+    MembershipInput:
+      type: object
+      required:
+        - member_id
+        - gym_id
+        - startDate
+      properties:
+        member_id:
+          type: integer
+          example: 1
+        gym_id:
+          type: integer
+          example: 1
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+          nullable: true
+        trainer_id:
+          type: integer
+          nullable: true
+    Membership:
+      allOf:
+        -
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+        -
+          $ref: '#/components/schemas/MembershipInput'

@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 USE gyms_api;
 
 INSERT INTO gyms (name, address, monthly_fee) VALUES

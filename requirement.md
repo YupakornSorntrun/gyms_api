@@ -65,7 +65,7 @@
 
 ## 4. Entity-Relationship Diagram (ERD)
 
-![ER Diagram ระบบข้อมูลฟิตเนส](/erd.png)
+![ER Diagram ระบบข้อมูลฟิตเนส](/images/erd.png)
 
 
 ### ความสัมพันธ์ใน ERD
