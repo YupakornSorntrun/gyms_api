@@ -4,6 +4,9 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
+const path = require("path");
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
 
 // Import routes
 const GymRoutes = require("./routes/gyms");
@@ -20,7 +23,7 @@ app.use(helmet());
 /* cors เอาไว้ใช้เพื่อให้ frontend สามารถเรียก API ของ backend ได้ */
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGIN,
+    origin: process.env.ALLOWED_ORIGIN || false,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
@@ -31,7 +34,7 @@ function requireJson(req, res, next) {
   const methodsWithBody = ["POST", "PUT"];
   if (
     methodsWithBody.includes(req.method) &&
-    req.headers["content-type"] !== "application/json"
+    !req.is("application/json")
   ) {
     return res.status(415).json({
       error: {
@@ -48,6 +51,9 @@ app.use(requireJson);
 app.use(express.json({ limit: "10kb" })); // จำกัดขนาด request body เป็น 10Kb เพื่อป้องกันการโจมตีแบบ Denial of Service (DoS) ที่ส่งข้อมูลขนาดใหญ่เกินไป
 
 // เรียกใช้ routes
+// Swagger UI อ่านจาก openapi.yaml ที่ /api-docs
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(YAML.load(path.join(__dirname, "..", "openapi.yaml"))));
+
 app.use("/api/v1/gyms", GymRoutes);
 app.use("/api/v1/members", MemberRoutes);
 app.use("/api/v1/trainers", TrainerRoutes);
